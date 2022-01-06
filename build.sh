@@ -169,7 +169,7 @@ case "${GCC}" in
 	11)
 		BUILDER=debian:bullseye
 		BUILD_CC_VERSION=10
-		KERNEL_VERSION=5.10.74
+		KERNEL_VERSION=5.10.90
 		BINUTILS_VERSION=2.36
 		GCC_VERSION=11.2.0
 		GLIBC_VERSION=2.33
@@ -181,7 +181,7 @@ case "${GCC}" in
 	10)
 		BUILDER=debian:bullseye
 		BUILD_CC_VERSION=10
-		KERNEL_VERSION=5.4.154
+		KERNEL_VERSION=5.4.170
 		BINUTILS_VERSION=2.34
 		GCC_VERSION=10.3.0
 		GLIBC_VERSION=2.31
@@ -193,7 +193,7 @@ case "${GCC}" in
 	9)
 		BUILDER=debian:bullseye
 		BUILD_CC_VERSION=9
-		KERNEL_VERSION=4.19.212
+		KERNEL_VERSION=4.19.224
 		BINUTILS_VERSION=2.32
 		GCC_VERSION=9.4.0
 		GLIBC_VERSION=2.29
@@ -205,7 +205,7 @@ case "${GCC}" in
 	8)
 		BUILDER=ubuntu:bionic
 		BUILD_CC_VERSION=8
-		KERNEL_VERSION=4.14.251
+		KERNEL_VERSION=4.14.261
 		BINUTILS_VERSION=2.30
 		GCC_VERSION=8.5.0
 		GLIBC_VERSION=2.27
@@ -217,7 +217,7 @@ case "${GCC}" in
 	7)
 		BUILDER=ubuntu:bionic
 		BUILD_CC_VERSION=7
-		KERNEL_VERSION=4.9.287
+		KERNEL_VERSION=4.9.296
 		BINUTILS_VERSION=2.28
 		GCC_VERSION=7.5.0
 		GLIBC_VERSION=2.25
@@ -229,7 +229,7 @@ case "${GCC}" in
 	6)
 		BUILDER=ubuntu:bionic
 		BUILD_CC_VERSION=6
-		KERNEL_VERSION=4.4.289
+		KERNEL_VERSION=4.4.298
 		BINUTILS_VERSION=2.26
 		GCC_VERSION=6.5.0
 		GLIBC_VERSION=2.23
@@ -259,10 +259,10 @@ esac
 
 unsupported() {
 	echo "Unsupported combination: GCC=${GCC}, TARGET=${TARGET}" >&2
-	if [[ "${CI+set}" == set ]]; then
-		exit 0
-	fi
-	exit 1
+	case "${CI+set}" in
+		set) exit 0 ;;
+		*)   exit 1 ;;
+	esac
 }
 
 case "${GCC}:${TARGET}" in
@@ -291,7 +291,7 @@ case "${GCC}:${TARGET}" in
 		BINUTILS_VERSION=2.28
 		;;
 	5:nios2-*)
-		KERNEL_VERSION=4.4.289
+		KERNEL_VERSION=4.4.298
 		BINUTILS_VERSION=2.28
 		GLIBC_VERSION=2.23
 		;;
@@ -302,11 +302,11 @@ case "${GCC}:${TARGET}" in
 		GLIBC_VERSION=2.22
 		;;
 	[7-9]:riscv32-* | 10:riscv32-*)
-		KERNEL_VERSION=5.4.154
+		KERNEL_VERSION=5.4.170
 		GLIBC_VERSION=2.33
 		;;
 	[7-8]:riscv64-*)
-		KERNEL_VERSION=4.19.212
+		KERNEL_VERSION=4.19.224
 		BINUTILS_VERSION=2.30
 		GLIBC_VERSION=2.27
 		;;
@@ -378,7 +378,7 @@ EOF
 	printf 'labels.json: '; jq -CS '.' "${TMPDIR}/labels.json"
 	printf 'Expected Labels: '; jq -CS '.' "${TMPDIR}/expected.json"
 
-	cmp -s "${TMPDIR}/labels.json" "${TMPDIR}/expected.json"
+	diff -q "${TMPDIR}/labels.json" "${TMPDIR}/expected.json"
 }
 
 if skip_to_build; then
@@ -451,12 +451,13 @@ case "${DOCKERDIR}" in
 		;;
 esac
 
-echo docker build "${buildargs[@]}" "${DOCKERDIR}"
-docker build "${buildargs[@]}" "${DOCKERDIR}"
+execute() { printf '[%s]%s\n' "command" "$*"; "$@"; }
+
+execute docker build "${buildargs[@]}" "${DOCKERDIR}"
 
 if [[ "${NO_PUSH}" == "false" ]]; then
 	for tag in "${imagetags[@]}"; do
-		docker push "cions/gcc:${tag}"
-		docker push "ghcr.io/cions/gcc:${tag}"
+		execute docker push "cions/gcc:${tag}"
+		execute docker push "ghcr.io/cions/gcc:${tag}"
 	done
 fi

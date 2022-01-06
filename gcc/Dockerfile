@@ -5,7 +5,7 @@ ARG TARGET=aarch64-linux-gnu
 ARG KERNEL_ARCH=arm64
 ARG QEMU_ARCH=aarch64
 
-ARG KERNEL_VERSION=5.10.70
+ARG KERNEL_VERSION=5.10.90
 ARG BINUTILS_VERSION=2.36
 ARG GCC_VERSION=11.2.0
 ARG GLIBC_VERSION=2.33
@@ -79,6 +79,7 @@ ARG GLIBC_VERSION
 RUN curl -fsSLO "https://ftpmirror.gnu.org/glibc/glibc-${GLIBC_VERSION}.tar.xz" \
  && tar xf "glibc-${GLIBC_VERSION}.tar.xz" \
  && rm "glibc-${GLIBC_VERSION}.tar.xz"
+RUN sed -i '/^cc1libdir =/s@= .*@= $(libdir)/gcc/$(target_noncanonical)/$(gcc_version)@' /gcc-${GCC_VERSION}/libcc1/Makefile.in
 
 ARG PREFIX
 ARG TARGET
@@ -92,8 +93,6 @@ RUN mkdir -p "${PREFIX}/${TARGET}/lib" "${PREFIX}/${TARGET}/usr/lib" "${PREFIX}/
  && ln -sf "lib" "${PREFIX}/${TARGET}/usr/lib64" \
  && ln -sf "lib" "${PREFIX}/${TARGET}/usr/local/lib32" \
  && ln -sf "lib" "${PREFIX}/${TARGET}/usr/local/lib64"
-
-RUN sed -i '/^cc1libdir =/s@= .*@= $(libdir)/gcc/$(target_noncanonical)/$(gcc_version)@' /gcc-${GCC_VERSION}/libcc1/Makefile.in
 
 WORKDIR /linux-${KERNEL_VERSION}
 ARG KERNEL_ARCH

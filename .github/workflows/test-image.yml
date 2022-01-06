@@ -26,6 +26,7 @@ jobs:
         - mips64el
         - mipsel
         - nios2
+        - or1k
         - ppc
         - ppc64
         - ppc64le
@@ -37,11 +38,6 @@ jobs:
         - sparc64
         - x86_64
         - xtensa
-        include:
-        - version: 11
-          arch: or1k
-        - version: 10
-          arch: or1k
         exclude:
         - version: 5
           arch: ia64
@@ -51,6 +47,16 @@ jobs:
           arch: microblaze
         - version: 5
           arch: microblaze
+        - version: 9
+          arch: or1k
+        - version: 8
+          arch: or1k
+        - version: 7
+          arch: or1k
+        - version: 6
+          arch: or1k
+        - version: 5
+          arch: or1k
         - version: 6
           arch: riscv32
         - version: 5

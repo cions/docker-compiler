@@ -5,7 +5,7 @@ ARG TARGET=aarch64-linux-gnu
 ARG KERNEL_ARCH=arm64
 ARG QEMU_ARCH=aarch64
 
-ARG KERNEL_VERSION=5.10.70
+ARG KERNEL_VERSION=5.10.90
 ARG BINUTILS_VERSION=2.36
 ARG GCC_VERSION=11.2.0
 ARG UCLIBC_VERSION=1.0.39
@@ -79,6 +79,9 @@ ARG UCLIBC_VERSION
 RUN curl -fsSLO "https://downloads.uclibc-ng.org/releases/${UCLIBC_VERSION}/uClibc-ng-${UCLIBC_VERSION}.tar.xz" \
  && tar xf "uClibc-ng-${UCLIBC_VERSION}.tar.xz" \
  && rm "uClibc-ng-${UCLIBC_VERSION}.tar.xz"
+RUN sed -i '/^cc1libdir =/s@= .*@= $(libdir)/gcc/$(target_noncanonical)/$(gcc_version)@' /gcc-${GCC_VERSION}/libcc1/Makefile.in \
+ && sed -i '/^#define XCHAL_HAVE_BE/s/1/0/' binutils-${BINUTILS_VERSION}/include/xtensa-config.h \
+ && sed -i '/^#define XCHAL_HAVE_BE/s/1/0/' gcc-${GCC_VERSION}/include/xtensa-config.h
 
 ARG PREFIX
 ARG TARGET
@@ -92,10 +95,6 @@ RUN mkdir -p "${PREFIX}/${TARGET}/lib" "${PREFIX}/${TARGET}/usr/lib" "${PREFIX}/
  && ln -sf "lib" "${PREFIX}/${TARGET}/usr/lib64" \
  && ln -sf "lib" "${PREFIX}/${TARGET}/usr/local/lib32" \
  && ln -sf "lib" "${PREFIX}/${TARGET}/usr/local/lib64"
-
-RUN sed -i '/^cc1libdir =/s@= .*@= $(libdir)/gcc/$(target_noncanonical)/$(gcc_version)@' /gcc-${GCC_VERSION}/libcc1/Makefile.in \
- && sed -i '/^#define XCHAL_HAVE_BE/s/1/0/' binutils-${BINUTILS_VERSION}/include/xtensa-config.h \
- && sed -i '/^#define XCHAL_HAVE_BE/s/1/0/' gcc-${GCC_VERSION}/include/xtensa-config.h
 
 WORKDIR /linux-${KERNEL_VERSION}
 ARG KERNEL_ARCH
