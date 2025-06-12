@@ -8,19 +8,11 @@ set -euo pipefail
 : "${NO_PUSH:=false}"
 
 binutils_configure_args=()
+glibc_configure_args=()
 gcc_configure_args=()
 gcc_stage1_configure_args=()
 gcc_stage2_configure_args=()
-glibc_configure_args=()
 imagetags=()
-
-DOCKERDIR="gcc"
-UCLIBC_VERSION=1.0.39
-case "${TARGET}" in
-	*-uclibc)
-		DOCKERDIR="gcc-uclibc"
-		;;
-esac
 
 case "${TARGET}" in
 	aarch64-*)
@@ -53,6 +45,11 @@ case "${TARGET}" in
 		QEMU_ARCH="ia64"
 		IMAGE_TAG="ia64"
 		gcc_stage1_configure_args+=( "--with-system-libunwind" )
+		;;
+	loongarch64-*)
+		KERNEL_ARCH="loongarch"
+		QEMU_ARCH="loongarch64"
+		IMAGE_TAG="loong64"
 		;;
 	m68k-*)
 		KERNEL_ARCH="m68k"
@@ -165,47 +162,105 @@ case "${TARGET}" in
 		exit 1
 esac
 
+case "${TARGET}" in
+	*-uclibc)
+		DOCKERDIR="gcc-uclibc"
+		UCLIBC_VERSION=1.0.52
+		;;
+	*)
+		DOCKERDIR="gcc"
+		;;
+esac
+
 case "${GCC}" in
+	15)
+		BUILDER=debian:bookworm
+		BUILD_CC_VERSION=12
+		KERNEL_VERSION=6.12.33
+		BINUTILS_VERSION=2.44
+		GCC_VERSION=15.1.0
+		GLIBC_VERSION=2.41
+		GMP_VERSION=6.3.0
+		MPFR_VERSION=4.2.2
+		MPC_VERSION=1.3.1
+		imagetags+=( "15.1-${IMAGE_TAG}" "15-${IMAGE_TAG}" "${IMAGE_TAG}" )
+		;;
+	14)
+		BUILDER=debian:bookworm
+		BUILD_CC_VERSION=12
+		KERNEL_VERSION=6.6.93
+		BINUTILS_VERSION=2.42
+		GCC_VERSION=14.3.0
+		GLIBC_VERSION=2.39
+		GMP_VERSION=6.3.0
+		MPFR_VERSION=4.2.1
+		MPC_VERSION=1.3.1
+		imagetags+=( "14.3-${IMAGE_TAG}" "14-${IMAGE_TAG}" )
+		;;
+	13)
+		BUILDER=debian:bookworm
+		BUILD_CC_VERSION=12
+		KERNEL_VERSION=6.1.141
+		BINUTILS_VERSION=2.40
+		GCC_VERSION=13.4.0
+		GLIBC_VERSION=2.37
+		GMP_VERSION=6.2.1
+		MPFR_VERSION=4.2.0
+		MPC_VERSION=1.3.1
+		imagetags+=( "13.4-${IMAGE_TAG}" "13-${IMAGE_TAG}" )
+		;;
+	12)
+		BUILDER=debian:bookworm
+		BUILD_CC_VERSION=12
+		KERNEL_VERSION=5.15.185
+		BINUTILS_VERSION=2.40
+		GCC_VERSION=12.4.0
+		GLIBC_VERSION=2.37
+		GMP_VERSION=6.2.1
+		MPFR_VERSION=4.1.0
+		MPC_VERSION=1.2.1
+		imagetags+=( "12.4-${IMAGE_TAG}" "12-${IMAGE_TAG}" )
+		;;
 	11)
 		BUILDER=debian:bullseye
 		BUILD_CC_VERSION=10
-		KERNEL_VERSION=5.10.90
+		KERNEL_VERSION=5.10.238
 		BINUTILS_VERSION=2.36
-		GCC_VERSION=11.2.0
+		GCC_VERSION=11.5.0
 		GLIBC_VERSION=2.33
 		GMP_VERSION=6.2.1
 		MPFR_VERSION=4.1.0
 		MPC_VERSION=1.2.1
-		imagetags+=( "11.2-${IMAGE_TAG}" "11-${IMAGE_TAG}" "${IMAGE_TAG}" )
+		imagetags+=( "11.5-${IMAGE_TAG}" "11-${IMAGE_TAG}" )
 		;;
 	10)
 		BUILDER=debian:bullseye
 		BUILD_CC_VERSION=10
-		KERNEL_VERSION=5.4.170
+		KERNEL_VERSION=5.4.294
 		BINUTILS_VERSION=2.34
-		GCC_VERSION=10.3.0
+		GCC_VERSION=10.5.0
 		GLIBC_VERSION=2.31
 		GMP_VERSION=6.2.0
 		MPFR_VERSION=4.0.2
 		MPC_VERSION=1.1.0
-		imagetags+=( "10.3-${IMAGE_TAG}" "10-${IMAGE_TAG}" )
+		imagetags+=( "10.5-${IMAGE_TAG}" "10-${IMAGE_TAG}" )
 		;;
 	9)
 		BUILDER=debian:bullseye
 		BUILD_CC_VERSION=9
-		KERNEL_VERSION=4.19.224
+		KERNEL_VERSION=4.19.325
 		BINUTILS_VERSION=2.32
-		GCC_VERSION=9.4.0
+		GCC_VERSION=9.5.0
 		GLIBC_VERSION=2.29
 		GMP_VERSION=6.1.2
 		MPFR_VERSION=4.0.2
 		MPC_VERSION=1.1.0
-		imagetags+=( "9.4-${IMAGE_TAG}" "9-${IMAGE_TAG}" )
+		imagetags+=( "9.5-${IMAGE_TAG}" "9-${IMAGE_TAG}" )
 		;;
 	8)
 		BUILDER=ubuntu:bionic
 		BUILD_CC_VERSION=8
-		KERNEL_VERSION=4.14.261
+		KERNEL_VERSION=4.14.336
 		BINUTILS_VERSION=2.30
 		GCC_VERSION=8.5.0
 		GLIBC_VERSION=2.27
@@ -217,7 +272,7 @@ case "${GCC}" in
 	7)
 		BUILDER=ubuntu:bionic
 		BUILD_CC_VERSION=7
-		KERNEL_VERSION=4.9.296
+		KERNEL_VERSION=4.9.337
 		BINUTILS_VERSION=2.28
 		GCC_VERSION=7.5.0
 		GLIBC_VERSION=2.25
@@ -229,7 +284,7 @@ case "${GCC}" in
 	6)
 		BUILDER=ubuntu:bionic
 		BUILD_CC_VERSION=6
-		KERNEL_VERSION=4.4.298
+		KERNEL_VERSION=4.4.302
 		BINUTILS_VERSION=2.26
 		GCC_VERSION=6.5.0
 		GLIBC_VERSION=2.23
@@ -259,11 +314,17 @@ esac
 
 unsupported() {
 	echo "Unsupported combination: GCC=${GCC}, TARGET=${TARGET}" >&2
-	case "${CI+set}" in
-		set) exit 0 ;;
-		*)   exit 1 ;;
-	esac
+	if [[ -n "${CI+set}" ]]; then
+		exit 0
+	fi
+	exit 1
 }
+
+case "${GCC}:${TARGET}" in
+	[5-9]:*-uclibc)
+		KERNEL_VERSION=5.4.294
+		;;
+esac
 
 case "${GCC}:${TARGET}" in
 	7:hppa-*)
@@ -272,16 +333,22 @@ case "${GCC}:${TARGET}" in
 	5:hppa-*)
 		GLIBC_VERSION=2.23
 		;;
+	5:ia64-* | 1[4-5]:ia64-*)
+		unsupported
+		;;
 	11:ia64-*)
 		BINUTILS_VERSION=2.34
 		;;
-	5:ia64-*)
+	[5-9]:loongarch64-* | 1[0-2]:loongarch64-*)
 		unsupported
 		;;
 	[5-6]:m68k-*)
 		gcc_stage1_configure_args+=( '--with-headers="${PREFIX}/${TARGET}/usr/include"' )
 		;;
 	[5-7]:microblaze-*)
+		unsupported
+		;;
+	1[4-5]:nios2-*)
 		unsupported
 		;;
 	11:nios2-*)
@@ -291,7 +358,7 @@ case "${GCC}:${TARGET}" in
 		BINUTILS_VERSION=2.28
 		;;
 	5:nios2-*)
-		KERNEL_VERSION=4.4.298
+		KERNEL_VERSION=4.4.302
 		BINUTILS_VERSION=2.28
 		GLIBC_VERSION=2.23
 		;;
@@ -302,11 +369,11 @@ case "${GCC}:${TARGET}" in
 		GLIBC_VERSION=2.22
 		;;
 	[7-9]:riscv32-* | 10:riscv32-*)
-		KERNEL_VERSION=5.4.170
+		KERNEL_VERSION=5.4.294
 		GLIBC_VERSION=2.33
 		;;
 	[7-8]:riscv64-*)
-		KERNEL_VERSION=4.19.224
+		KERNEL_VERSION=4.19.325
 		BINUTILS_VERSION=2.30
 		GLIBC_VERSION=2.27
 		;;
@@ -317,7 +384,7 @@ case "${GCC}:${TARGET}" in
 		BINUTILS_VERSION=2.30
 		GLIBC_VERSION=2.26
 		;;
-	1[0-1]:sparc-*)
+	1[0-5]:sparc-*)
 		gcc_configure_args+=( "--with-cpu=v9" )
 		;;
 	[5-9]:sparc-*)
@@ -354,35 +421,35 @@ skip_to_build() {
 
 	cat > "${TMPDIR}/expected.json.in" <<EOF
 {
-	"crossdev.binutils.version": "${BINUTILS_VERSION}",
-	"crossdev.dockerfile": "${DOCKERFILE_HASH}",
-	"crossdev.gcc.version": "${GCC_VERSION}",
-	"crossdev.gmp.version": "${GMP_VERSION}",
-	"crossdev.kernel.version": "${KERNEL_VERSION}",
-	"crossdev.mpc.version": "${MPC_VERSION}",
-	"crossdev.mpfr.version": "${MPFR_VERSION}",
-	"crossdev.target": "${TARGET}",
-	"org.opencontainers.image.source": "https://github.com/cions/docker-crossdev"
+	"compiler.binutils.version": "${BINUTILS_VERSION}",
+	"compiler.dockerfile": "${DOCKERFILE_HASH}",
+	"compiler.gcc.version": "${GCC_VERSION}",
+	"compiler.gmp.version": "${GMP_VERSION}",
+	"compiler.kernel.version": "${KERNEL_VERSION}",
+	"compiler.mpc.version": "${MPC_VERSION}",
+	"compiler.mpfr.version": "${MPFR_VERSION}",
+	"compiler.target": "${TARGET}",
+	"org.opencontainers.image.source": "https://github.com/cions/docker-compiler"
 }
 EOF
 
 	case "${DOCKERDIR}" in
 		*-uclibc)
-			jq -Sc --arg version "${UCLIBC_VERSION}" '.["crossdev.uclibc.version"] |= $version' < "${TMPDIR}/expected.json.in" > "${TMPDIR}/expected.json"
+			jq -Sc --arg version "${UCLIBC_VERSION}" '.["compiler.uclibc.version"] |= $version' < "${TMPDIR}/expected.json.in" > "${TMPDIR}/expected.json"
 			;;
 		*)
-			jq -Sc --arg version "${GLIBC_VERSION}" '.["crossdev.glibc.version"] |= $version' < "${TMPDIR}/expected.json.in" > "${TMPDIR}/expected.json"
+			jq -Sc --arg version "${GLIBC_VERSION}" '.["compiler.glibc.version"] |= $version' < "${TMPDIR}/expected.json.in" > "${TMPDIR}/expected.json"
 			;;
 	esac
 
-	printf 'labels.json: '; jq -CS '.' "${TMPDIR}/labels.json"
-	printf 'Expected Labels: '; jq -CS '.' "${TMPDIR}/expected.json"
+	printf "labels.json: "; jq -CS '.' "${TMPDIR}/labels.json"
+	printf "Expected Labels: "; jq -CS '.' "${TMPDIR}/expected.json"
 
 	diff -q "${TMPDIR}/labels.json" "${TMPDIR}/expected.json"
 }
 
 if skip_to_build; then
-	echo "Image already exist. Skip to build" >&2
+	echo "Image already exists. Skip to build." >&2
 	exit 0
 fi
 
@@ -397,8 +464,8 @@ echo "    QEMU_ARCH: ${QEMU_ARCH}"
 echo "    KERNEL_VERSION: ${KERNEL_VERSION}"
 echo "    BINUTILS_VERSION: ${BINUTILS_VERSION}"
 echo "    GCC_VERSION: ${GCC_VERSION}"
-echo "    GLIBC_VERSION: ${GLIBC_VERSION}"
-echo "    UCLIBC_VERSION: ${UCLIBC_VERSION}"
+echo "    GLIBC_VERSION: ${GLIBC_VERSION:-}"
+echo "    UCLIBC_VERSION: ${UCLIBC_VERSION:-}"
 echo "    GMP_VERSION: ${GMP_VERSION}"
 echo "    MPFR_VERSION: ${MPFR_VERSION}"
 echo "    MPC_VERSION: ${MPC_VERSION}"
@@ -451,7 +518,14 @@ case "${DOCKERDIR}" in
 		;;
 esac
 
-execute() { printf '[%s]%s\n' "command" "$*"; "$@"; }
+execute() {
+	if [[ -n "${GITHUB_ACTIONS+set}" ]]; then
+		printf '[%s]%s\n' "command" "$*"
+	else
+		printf '\x1b[1;36m%s\x1b[0m\n' "$*"
+	fi
+	"$@"
+}
 
 execute docker build "${buildargs[@]}" "${DOCKERDIR}"
 

@@ -2,25 +2,32 @@ name: Build Image
 
 on:
   push:
-  pull_request:
   workflow_dispatch:
     inputs:
-      force-to-build:
+      push-image:
+        type: boolean
+        default: true
+        required: false
+        description: "Push built image"
+      force-rebuild:
         type: boolean
         default: false
         required: false
-        description: 'Force to build images'
+        description: "Force rebuild"
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build-gcc-image:
-    name: Build Image (GCC ${{ matrix.gcc }} / ${{ matrix.target }})
+    name: Build Image (GCC ${{ matrix.target }})
 
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        gcc: [11, 10, 9, 8, 7, 6, 5]
         target:
         - aarch64-linux-gnu
         - alpha-linux-gnu
@@ -28,6 +35,7 @@ jobs:
         - hppa-linux-gnu
         - i686-linux-gnu
         - ia64-linux-gnu
+        - loongarch64-linux-gnu
         - m68k-linux-gnu
         - microblaze-linux-gnu
         - mips-linux-gnu
@@ -48,34 +56,66 @@ jobs:
         - x86_64-linux-gnu
         - xtensa-linux-uclibc
 
+    env:
+      TARGET: ${{ matrix.target }}
+      PUSH_IMAGE: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.push-image }}
+      FORCE_REBUILD: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force-rebuild }}
+
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
-    - name: Setup Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: '1.x'
+      uses: actions/checkout@v4
     - name: Login to Docker Hub
-      uses: docker/login-action@v1
+      uses: docker/login-action@v3
       with:
-        username: cions
+        username: ${{ github.actor }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
+      uses: docker/login-action@v3
       with:
         registry: ghcr.io
-        username: cions
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build Image
-      env:
-        GCC: ${{ matrix.gcc }}
-        TARGET: ${{ matrix.target }}
-        FORCE_BUILD: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force-to-build }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN}}
+    - name: Build GCC 15
+      if: always()
+      env: { GCC: 15 }
       run: ./build.sh
-
-  test-image:
-    name: Test Image
-    needs:
-    - build-gcc-image
-    if: always()
-    uses: cions/docker-crossdev/.github/workflows/test-image.yml@master
+    - name: Build GCC 14
+      if: always()
+      env: { GCC: 14 }
+      run: ./build.sh
+    - name: Build GCC 13
+      if: always()
+      env: { GCC: 13 }
+      run: ./build.sh
+    - name: Build GCC 12
+      if: always()
+      env: { GCC: 12 }
+      run: ./build.sh
+    - name: Build GCC 11
+      if: always()
+      env: { GCC: 11 }
+      run: ./build.sh
+    - name: Build GCC 10
+      if: always()
+      env: { GCC: 10 }
+      run: ./build.sh
+    - name: Build GCC 9
+      if: always()
+      env: { GCC: 9 }
+      run: ./build.sh
+    - name: Build GCC 8
+      if: always()
+      env: { GCC: 8 }
+      run: ./build.sh
+    - name: Build GCC 7
+      if: always()
+      env: { GCC: 7 }
+      run: ./build.sh
+    - name: Build GCC 6
+      if: always()
+      env: { GCC: 6 }
+      run: ./build.sh
+    - name: Build GCC 5
+      if: always()
+      env: { GCC: 5 }
+      run: ./build.sh

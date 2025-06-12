@@ -1,17 +1,46 @@
 name: Test Image
 
 on:
-  workflow_call:
   workflow_dispatch:
+  workflow_run:
+    types: [ completed ]
+    workflows: [ "Build Image" ]
 
 jobs:
-  test-gcc-image:
+  test-gcc-image-1:
     name: Test Image (gcc:${{ matrix.version }}-${{ matrix.arch }})
-
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cions/gcc:${{ matrix.version }}-${{ matrix.arch }}
+    timeout-minutes: 5
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Print compiler version
+      shell: bash
+      run: ${CC} --version
+    - name: Print predefined macros
+      shell: bash
+      run: ${CC} -E -dM -x c /dev/null | sort
+    - name: Test C program
+      shell: bash
+      run: |
+        ${CC} -O2 -v -o test-c test.c
+        if command -v ${QEMU} >/dev/null; then
+          ${QEMU} ./test-c
+        fi
+    - name: Test C++ program
+      shell: bash
+      run: |
+        ${CXX} -std=c++11 -O2 -v -o test-cpp test.cpp -pthread -Wl,--as-needed -latomic -Wl,--no-as-needed
+        if command -v ${QEMU} >/dev/null; then
+          ${QEMU} ./test-cpp
+        fi
     strategy:
       fail-fast: false
       matrix:
-        version: [11, 10, 9, 8, 7, 6, 5]
+        version: [15, 14, 13, 12, 11]
         arch:
         - aarch64
         - alpha
@@ -19,6 +48,7 @@ jobs:
         - hppa
         - i386
         - ia64
+        - loong64
         - m68k
         - microblaze
         - mips
@@ -39,97 +69,80 @@ jobs:
         - x86_64
         - xtensa
         exclude:
-        - version: 5
-          arch: ia64
-        - version: 7
-          arch: microblaze
-        - version: 6
-          arch: microblaze
-        - version: 5
-          arch: microblaze
-        - version: 9
-          arch: or1k
-        - version: 8
-          arch: or1k
-        - version: 7
-          arch: or1k
-        - version: 6
-          arch: or1k
-        - version: 5
-          arch: or1k
-        - version: 6
-          arch: riscv32
-        - version: 5
-          arch: riscv32
-        - version: 6
-          arch: riscv64
-        - version: 5
-          arch: riscv64
+        - { version: 15, arch: ia64 }
+        - { version: 14, arch: ia64 }
+        - { version: 12, arch: loong64 }
+        - { version: 11, arch: loong64 }
+        - { version: 15, arch: nios2 }
+        - { version: 14, arch: nios2 }
 
+  test-gcc-image-2:
+    name: Test Image (gcc:${{ matrix.version }}-${{ matrix.arch }})
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/cions/gcc:${{ matrix.version }}-${{ matrix.arch }}
-
     timeout-minutes: 5
-
     steps:
-    - name: Print GCC Version
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Print compiler version
+      shell: bash
       run: ${CC} --version
-    - name: Print Predefined Macros
+    - name: Print predefined macros
+      shell: bash
       run: ${CC} -E -dM -x c /dev/null | sort
     - name: Test C program
-      env:
-        SOURCE_CODE: |
-          #include <stdio.h>
-          #include <stdlib.h>
-
-          int main(void) {
-            printf("Hello, world!\n");
-            exit(EXIT_SUCCESS);
-          }
+      shell: bash
       run: |
-        printf "%s" "${SOURCE_CODE}" > test-c.c
-        ${CC} -O2 -v -o test-c test-c.c
+        ${CC} -O2 -v -o test-c test.c
         if command -v ${QEMU} >/dev/null; then
           ${QEMU} ./test-c
         fi
     - name: Test C++ program
-      env:
-        SOURCE_CODE: |
-          #include <atomic>
-          #include <cstdlib>
-          #include <iostream>
-          #include <stdexcept>
-          #include <thread>
-          #include <vector>
-
-          int main() {
-            try {
-              throw std::runtime_error("exception");
-            } catch (const std::exception&) {
-              std::cout << "an exception was caught" << std::endl;
-            }
-
-            std::atomic<int> aint(1);
-
-            std::vector<std::thread> threads;
-            for (int i = 0; i < 16; ++i) {
-              threads.emplace_back([&]() {
-                int expected = aint.load(std::memory_order_seq_cst);
-                while (!aint.compare_exchange_strong(expected, expected * 2, std::memory_order_seq_cst));
-              });
-            }
-            for (auto && t : threads) {
-              t.join();
-            }
-
-            std::cout << "aint = " << aint.load(std::memory_order_seq_cst) << std::endl;
-
-            return EXIT_SUCCESS;
-          }
+      shell: bash
       run: |
-        printf "%s" "${SOURCE_CODE}" > test-cpp.cpp
-        ${CXX} -std=gnu++11 -O2 -v -o test-cpp test-cpp.cpp -pthread -Wl,--as-needed -latomic -Wl,--no-as-needed
+        ${CXX} -std=c++11 -O2 -v -o test-cpp test.cpp -pthread -Wl,--as-needed -latomic -Wl,--no-as-needed
         if command -v ${QEMU} >/dev/null; then
           ${QEMU} ./test-cpp
         fi
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [10, 9, 8, 7, 6, 5]
+        arch:
+        - aarch64
+        - alpha
+        - arm
+        - hppa
+        - i386
+        - ia64
+        - m68k
+        - microblaze
+        - mips
+        - mips64
+        - mips64el
+        - mipsel
+        - nios2
+        - ppc
+        - ppc64
+        - ppc64le
+        - riscv32
+        - riscv64
+        - s390x
+        - sh4
+        - sparc
+        - sparc64
+        - x86_64
+        - xtensa
+        include:
+        - { version: 10, arch: or1k }
+        exclude:
+        - { version: 5, arch: ia64 }
+        - { version: 7, arch: microblaze }
+        - { version: 6, arch: microblaze }
+        - { version: 5, arch: microblaze }
+        - { version: 6, arch: riscv32 }
+        - { version: 5, arch: riscv32 }
+        - { version: 6, arch: riscv64 }
+        - { version: 5, arch: riscv64 }
