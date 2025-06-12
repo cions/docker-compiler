@@ -1,17 +1,21 @@
 name: Test Image
 
 on:
-  workflow_call:
   workflow_dispatch:
+  workflow_run:
+    types: [ completed ]
+    workflows: [ "Build Image" ]
 
 jobs:
   test-gcc-image:
     name: Test Image (gcc:${{ matrix.version }}-${{ matrix.arch }})
 
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+
     strategy:
       fail-fast: false
       matrix:
-        version: [11, 10, 9, 8, 7, 6, 5]
+        version: [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5]
         arch:
         - aarch64
         - alpha
@@ -19,6 +23,7 @@ jobs:
         - hppa
         - i386
         - ia64
+        - loong64
         - m68k
         - microblaze
         - mips
@@ -39,43 +44,38 @@ jobs:
         - x86_64
         - xtensa
         exclude:
-        - version: 5
-          arch: ia64
-        - version: 7
-          arch: microblaze
-        - version: 6
-          arch: microblaze
-        - version: 5
-          arch: microblaze
-        - version: 9
-          arch: or1k
-        - version: 8
-          arch: or1k
-        - version: 7
-          arch: or1k
-        - version: 6
-          arch: or1k
-        - version: 5
-          arch: or1k
-        - version: 6
-          arch: riscv32
-        - version: 5
-          arch: riscv32
-        - version: 6
-          arch: riscv64
-        - version: 5
-          arch: riscv64
+        - { version: 5, arch: ia64 }
+        - { version: 11, arch: loong64 }
+        - { version: 10, arch: loong64 }
+        - { version: 9, arch: loong64 }
+        - { version: 8, arch: loong64 }
+        - { version: 7, arch: loong64 }
+        - { version: 6, arch: loong64 }
+        - { version: 5, arch: loong64 }
+        - { version: 7, arch: microblaze }
+        - { version: 6, arch: microblaze }
+        - { version: 5, arch: microblaze }
+        - { version: 9, arch: or1k }
+        - { version: 8, arch: or1k }
+        - { version: 7, arch: or1k }
+        - { version: 6, arch: or1k }
+        - { version: 5, arch: or1k }
+        - { version: 6, arch: riscv32 }
+        - { version: 5, arch: riscv32 }
+        - { version: 6, arch: riscv64 }
+        - { version: 5, arch: riscv64 }
 
     runs-on: ubuntu-latest
+
     container:
       image: ghcr.io/cions/gcc:${{ matrix.version }}-${{ matrix.arch }}
 
     timeout-minutes: 5
 
     steps:
-    - name: Print GCC Version
+    - name: Print GCC version
       run: ${CC} --version
-    - name: Print Predefined Macros
+    - name: Print predefined macros
       run: ${CC} -E -dM -x c /dev/null | sort
     - name: Test C program
       env:
@@ -97,7 +97,6 @@ jobs:
       env:
         SOURCE_CODE: |
           #include <atomic>
-          #include <cstdlib>
           #include <iostream>
           #include <stdexcept>
           #include <thread>
@@ -123,13 +122,18 @@ jobs:
               t.join();
             }
 
-            std::cout << "aint = " << aint.load(std::memory_order_seq_cst) << std::endl;
+            int expected = 65536;
+            int actual = aint.load(std::memory_order_seq_cst);
+            std::cout << "expected: " << expected << ", actual: " << actual << std::endl;
+            if (actual != expected) {
+              return 1;
+            }
 
-            return EXIT_SUCCESS;
+            return 0;
           }
       run: |
         printf "%s" "${SOURCE_CODE}" > test-cpp.cpp
-        ${CXX} -std=gnu++11 -O2 -v -o test-cpp test-cpp.cpp -pthread -Wl,--as-needed -latomic -Wl,--no-as-needed
+        ${CXX} -std=c++11 -O2 -v -o test-cpp test-cpp.cpp -pthread -Wl,--as-needed -latomic -Wl,--no-as-needed
         if command -v ${QEMU} >/dev/null; then
           ${QEMU} ./test-cpp
         fi
