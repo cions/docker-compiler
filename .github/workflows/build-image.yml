@@ -15,15 +15,42 @@ permissions:
   contents: read
 
 jobs:
-  build-gcc-image:
+  .build-gcc-image-template: &build-gcc-image-template
     name: Build Image (GCC ${{ matrix.gcc }} / ${{ matrix.target }})
 
     runs-on: ubuntu-latest
 
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Login to Docker Hub
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Login to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build Image
+      env:
+        GCC: ${{ matrix.gcc }}
+        TARGET: ${{ matrix.target }}
+        PUSH_IMAGE: ${{ github.event_name != 'pull_request' }}
+        FORCE_REBUILD: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force-rebuild }}
+      run: ./build.sh
+
+  build-gcc-image-1:
+    <<: *build-gcc-image-template
+
     strategy:
       fail-fast: false
       matrix:
-        gcc: [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5]
+        gcc: [15, 14, 13, 12, 11]
         target:
         - aarch64-linux-gnu
         - alpha-linux-gnu
@@ -52,26 +79,37 @@ jobs:
         - x86_64-linux-gnu
         - xtensa-linux-uclibc
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Login to Docker Hub
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
-      with:
-        username: ${{ github.actor }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Login to GitHub Container Registry
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build Image
-      env:
-        GCC: ${{ matrix.gcc }}
-        TARGET: ${{ matrix.target }}
-        PUSH_IMAGE: ${{ github.event_name != 'pull_request' }}
-        FORCE_REBUILD: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force-rebuild }}
-      run: ./build.sh
+  build-gcc-image-2:
+    <<: *build-gcc-image-template
+
+    strategy:
+      fail-fast: false
+      matrix:
+        gcc: [10, 9, 8, 7, 6, 5]
+        target:
+        - aarch64-linux-gnu
+        - alpha-linux-gnu
+        - arm-linux-gnueabihf
+        - hppa-linux-gnu
+        - i686-linux-gnu
+        - ia64-linux-gnu
+        - loongarch64-linux-gnu
+        - m68k-linux-gnu
+        - microblaze-linux-gnu
+        - mips-linux-gnu
+        - mips64-linux-gnuabi64
+        - mips64el-linux-gnuabi64
+        - mipsel-linux-gnu
+        - nios2-linux-gnu
+        - or1k-linux-uclibc
+        - powerpc-linux-gnu
+        - powerpc64-linux-gnu
+        - powerpc64le-linux-gnu
+        - riscv32-linux-gnu
+        - riscv64-linux-gnu
+        - s390x-linux-gnu
+        - sh4-linux-gnu
+        - sparc-linux-gnu
+        - sparc64-linux-gnu
+        - x86_64-linux-gnu
+        - xtensa-linux-uclibc
