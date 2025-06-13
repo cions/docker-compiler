@@ -4,6 +4,8 @@ author: "cions"
 runs:
   using: composite
   steps:
+  - name: Checkout
+    uses: actions/checkout@v4
   - name: Print compiler version
     shell: bash
     run: ${CC} --version

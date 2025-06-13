@@ -53,6 +53,8 @@ jobs:
         - xtensa-linux-uclibc
 
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
     - uses: ./.github/actions/build-image
       with:
         gcc: ${{ matrix.gcc }}
@@ -96,6 +98,8 @@ jobs:
         - xtensa-linux-uclibc
 
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
     - uses: ./.github/actions/build-image
       with:
         gcc: ${{ matrix.gcc }}

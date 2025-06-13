@@ -210,7 +210,10 @@ ARG DOCKERFILE_HASH=unset
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
+        ca-certificates \
         cmake \
+        curl \
+        git \
         make \
  && rm -rf /var/lib/apt/lists/*
 
