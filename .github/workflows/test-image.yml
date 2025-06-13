@@ -7,15 +7,19 @@ on:
     workflows: [ "Build Image" ]
 
 jobs:
-  test-gcc-image:
+  test-gcc-image-1:
     name: Test Image (gcc:${{ matrix.version }}-${{ matrix.arch }})
-
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
-
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cions/gcc:${{ matrix.version }}-${{ matrix.arch }}
+    timeout-minutes: 5
+    steps:
+    - uses: ./.github/actions/test-image
     strategy:
       fail-fast: false
       matrix:
-        version: [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5]
+        version: [15, 14, 13, 12, 11]
         arch:
         - aarch64
         - alpha
@@ -44,96 +48,54 @@ jobs:
         - x86_64
         - xtensa
         exclude:
-        - { version: 5, arch: ia64 }
         - { version: 11, arch: loong64 }
-        - { version: 10, arch: loong64 }
-        - { version: 9, arch: loong64 }
-        - { version: 8, arch: loong64 }
-        - { version: 7, arch: loong64 }
-        - { version: 6, arch: loong64 }
-        - { version: 5, arch: loong64 }
+
+  test-gcc-image-2:
+    name: Test Image (gcc:${{ matrix.version }}-${{ matrix.arch }})
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cions/gcc:${{ matrix.version }}-${{ matrix.arch }}
+    timeout-minutes: 5
+    steps:
+    - uses: ./.github/actions/test-image
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [10, 9, 8, 7, 6, 5]
+        arch:
+        - aarch64
+        - alpha
+        - arm
+        - hppa
+        - i386
+        - ia64
+        - m68k
+        - microblaze
+        - mips
+        - mips64
+        - mips64el
+        - mipsel
+        - nios2
+        - ppc
+        - ppc64
+        - ppc64le
+        - riscv32
+        - riscv64
+        - s390x
+        - sh4
+        - sparc
+        - sparc64
+        - x86_64
+        - xtensa
+        include:
+        - { version: 10, arch: or1k }
+        exclude:
+        - { version: 5, arch: ia64 }
         - { version: 7, arch: microblaze }
         - { version: 6, arch: microblaze }
         - { version: 5, arch: microblaze }
-        - { version: 9, arch: or1k }
-        - { version: 8, arch: or1k }
-        - { version: 7, arch: or1k }
-        - { version: 6, arch: or1k }
-        - { version: 5, arch: or1k }
         - { version: 6, arch: riscv32 }
         - { version: 5, arch: riscv32 }
         - { version: 6, arch: riscv64 }
         - { version: 5, arch: riscv64 }
-
-    runs-on: ubuntu-latest
-
-    container:
-      image: ghcr.io/cions/gcc:${{ matrix.version }}-${{ matrix.arch }}
-
-    timeout-minutes: 5
-
-    steps:
-    - name: Print GCC version
-      run: ${CC} --version
-    - name: Print predefined macros
-      run: ${CC} -E -dM -x c /dev/null | sort
-    - name: Test C program
-      env:
-        SOURCE_CODE: |
-          #include <stdio.h>
-          #include <stdlib.h>
-
-          int main(void) {
-            printf("Hello, world!\n");
-            exit(EXIT_SUCCESS);
-          }
-      run: |
-        printf "%s" "${SOURCE_CODE}" > test-c.c
-        ${CC} -O2 -v -o test-c test-c.c
-        if command -v ${QEMU} >/dev/null; then
-          ${QEMU} ./test-c
-        fi
-    - name: Test C++ program
-      env:
-        SOURCE_CODE: |
-          #include <atomic>
-          #include <iostream>
-          #include <stdexcept>
-          #include <thread>
-          #include <vector>
-
-          int main() {
-            try {
-              throw std::runtime_error("exception");
-            } catch (const std::exception&) {
-              std::cout << "an exception was caught" << std::endl;
-            }
-
-            std::atomic<int> aint(1);
-
-            std::vector<std::thread> threads;
-            for (int i = 0; i < 16; ++i) {
-              threads.emplace_back([&]() {
-                int expected = aint.load(std::memory_order_seq_cst);
-                while (!aint.compare_exchange_strong(expected, expected * 2, std::memory_order_seq_cst));
-              });
-            }
-            for (auto && t : threads) {
-              t.join();
-            }
-
-            int expected = 65536;
-            int actual = aint.load(std::memory_order_seq_cst);
-            std::cout << "expected: " << expected << ", actual: " << actual << std::endl;
-            if (actual != expected) {
-              return 1;
-            }
-
-            return 0;
-          }
-      run: |
-        printf "%s" "${SOURCE_CODE}" > test-cpp.cpp
-        ${CXX} -std=c++11 -O2 -v -o test-cpp test-cpp.cpp -pthread -Wl,--as-needed -latomic -Wl,--no-as-needed
-        if command -v ${QEMU} >/dev/null; then
-          ${QEMU} ./test-cpp
-        fi

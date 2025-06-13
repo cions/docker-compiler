@@ -1,0 +1,36 @@
+name: "Build Image"
+description: "Build Image"
+author: "cions"
+inputs:
+  gcc:
+    description: "GCC version"
+    required: true
+  target:
+    description: "Target triple"
+    required: true
+runs:
+  using: composite
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+  - name: Login to Docker Hub
+    if: github.event_name != 'pull_request'
+    uses: docker/login-action@v3
+    with:
+      username: ${{ github.actor }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
+  - name: Login to GitHub Container Registry
+    if: github.event_name != 'pull_request'
+    uses: docker/login-action@v3
+    with:
+      registry: ghcr.io
+      username: ${{ github.actor }}
+      password: ${{ secrets.GITHUB_TOKEN }}
+  - name: Build Image
+    shell: bash
+    env:
+      GCC: ${{ inputs.gcc }}
+      TARGET: ${{ inputs.target }}
+      PUSH_IMAGE: ${{ github.event_name != 'pull_request' }}
+      FORCE_REBUILD: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force-rebuild }}
+    run: ./build.sh

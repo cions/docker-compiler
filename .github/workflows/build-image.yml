@@ -15,37 +15,10 @@ permissions:
   contents: read
 
 jobs:
-  .build-gcc-image-template: &build-gcc-image-template
+  build-gcc-image-1:
     name: Build Image (GCC ${{ matrix.gcc }} / ${{ matrix.target }})
 
     runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Login to Docker Hub
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
-      with:
-        username: ${{ github.actor }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Login to GitHub Container Registry
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build Image
-      env:
-        GCC: ${{ matrix.gcc }}
-        TARGET: ${{ matrix.target }}
-        PUSH_IMAGE: ${{ github.event_name != 'pull_request' }}
-        FORCE_REBUILD: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force-rebuild }}
-      run: ./build.sh
-
-  build-gcc-image-1:
-    <<: *build-gcc-image-template
 
     strategy:
       fail-fast: false
@@ -79,8 +52,16 @@ jobs:
         - x86_64-linux-gnu
         - xtensa-linux-uclibc
 
+    steps:
+    - uses: ./.github/actions/build-image
+      with:
+        gcc: ${{ matrix.gcc }}
+        target: ${{ matrix.target }}
+
   build-gcc-image-2:
-    <<: *build-gcc-image-template
+    name: Build Image (GCC ${{ matrix.gcc }} / ${{ matrix.target }})
+
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -113,3 +94,9 @@ jobs:
         - sparc64-linux-gnu
         - x86_64-linux-gnu
         - xtensa-linux-uclibc
+
+    steps:
+    - uses: ./.github/actions/build-image
+      with:
+        gcc: ${{ matrix.gcc }}
+        target: ${{ matrix.target }}
