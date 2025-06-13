@@ -314,8 +314,10 @@ esac
 
 unsupported() {
 	echo "Unsupported combination: GCC=${GCC}, TARGET=${TARGET}" >&2
-	[[ -n "${CI+set}" ]]
-	exit $?
+	if [[ -n "${CI+set}" ]]; then
+		exit 0
+	fi
+	exit 1
 }
 
 case "${GCC}:${TARGET}" in
