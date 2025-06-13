@@ -325,16 +325,25 @@ case "${GCC}:${TARGET}" in
 	5:hppa-*)
 		GLIBC_VERSION=2.23
 		;;
+	5:ia64-* | 1[4-5]:ia64-*)
+		unsupported
+		;;
 	11:ia64-*)
 		BINUTILS_VERSION=2.34
 		;;
-	5:ia64-*)
+	12:loongarch64-*)
+		KERNEL_VERSION=6.1.141
+		;;
+	[5-9]:loongarch64-* | 1[0-1]:loongarch64-*)
 		unsupported
 		;;
 	[5-6]:m68k-*)
 		gcc_stage1_configure_args+=( '--with-headers="${PREFIX}/${TARGET}/usr/include"' )
 		;;
 	[5-7]:microblaze-*)
+		unsupported
+		;;
+	1[4-5]:nios2-*)
 		unsupported
 		;;
 	11:nios2-*)

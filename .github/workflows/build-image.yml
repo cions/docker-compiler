@@ -23,6 +23,7 @@ jobs:
 
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         gcc: [15, 14, 13, 12, 11]
         target:

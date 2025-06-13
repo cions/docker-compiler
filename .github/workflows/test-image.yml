@@ -50,7 +50,11 @@ jobs:
         - x86_64
         - xtensa
         exclude:
+        - { version: 15, arch: ia64 }
+        - { version: 14, arch: ia64 }
         - { version: 11, arch: loong64 }
+        - { version: 15, arch: nios2 }
+        - { version: 14, arch: nios2 }
 
   test-gcc-image-2:
     name: Test Image (gcc:${{ matrix.version }}-${{ matrix.arch }})
