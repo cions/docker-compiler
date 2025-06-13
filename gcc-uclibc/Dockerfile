@@ -187,7 +187,7 @@ RUN eval "declare -a gcc_configure_args=(${GCC_CONFIGURE_ARGS})" \
  && GLOBIGNORE="" rm -rf ./*
 
 WORKDIR ${PREFIX}/bin
-RUN for f in ${TARGET}-*; do ln -s "${f}" "${f#${TARGET}-}"; done
+RUN for f in ${TARGET}-*; do ln -sf "${f}" "${f#${TARGET}-}"; done
 
 ARG QEMU_ARCH
 COPY --from=qemu /bin/sh /usr/bin/[q]emu-${QEMU_ARCH}-static ${PREFIX}/bin/
