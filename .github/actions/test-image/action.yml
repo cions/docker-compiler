@@ -19,7 +19,6 @@ runs:
       fi
   - name: Test C++ program
     shell: bash
-    env:
     run: |
       ${CXX} -std=c++11 -O2 -v -o test-cpp test.cpp -pthread -Wl,--as-needed -latomic -Wl,--no-as-needed
       if command -v ${QEMU} >/dev/null; then
