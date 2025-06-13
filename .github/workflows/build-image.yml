@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   build-gcc-image-1:
@@ -23,34 +24,38 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gcc: [15, 14, 13, 12, 11]
+        # gcc: [15, 14, 13, 12, 11]
+        # target:
+        # - aarch64-linux-gnu
+        # - alpha-linux-gnu
+        # - arm-linux-gnueabihf
+        # - hppa-linux-gnu
+        # - i686-linux-gnu
+        # - ia64-linux-gnu
+        # - loongarch64-linux-gnu
+        # - m68k-linux-gnu
+        # - microblaze-linux-gnu
+        # - mips-linux-gnu
+        # - mips64-linux-gnuabi64
+        # - mips64el-linux-gnuabi64
+        # - mipsel-linux-gnu
+        # - nios2-linux-gnu
+        # - or1k-linux-uclibc
+        # - powerpc-linux-gnu
+        # - powerpc64-linux-gnu
+        # - powerpc64le-linux-gnu
+        # - riscv32-linux-gnu
+        # - riscv64-linux-gnu
+        # - s390x-linux-gnu
+        # - sh4-linux-gnu
+        # - sparc-linux-gnu
+        # - sparc64-linux-gnu
+        # - x86_64-linux-gnu
+        # - xtensa-linux-uclibc
+        gcc: [15]
         target:
         - aarch64-linux-gnu
-        - alpha-linux-gnu
-        - arm-linux-gnueabihf
-        - hppa-linux-gnu
-        - i686-linux-gnu
-        - ia64-linux-gnu
-        - loongarch64-linux-gnu
-        - m68k-linux-gnu
-        - microblaze-linux-gnu
-        - mips-linux-gnu
-        - mips64-linux-gnuabi64
-        - mips64el-linux-gnuabi64
-        - mipsel-linux-gnu
-        - nios2-linux-gnu
-        - or1k-linux-uclibc
-        - powerpc-linux-gnu
-        - powerpc64-linux-gnu
-        - powerpc64le-linux-gnu
-        - riscv32-linux-gnu
-        - riscv64-linux-gnu
-        - s390x-linux-gnu
-        - sh4-linux-gnu
-        - sparc-linux-gnu
-        - sparc64-linux-gnu
         - x86_64-linux-gnu
-        - xtensa-linux-uclibc
 
     steps:
     - name: Checkout
@@ -59,48 +64,50 @@ jobs:
       with:
         gcc: ${{ matrix.gcc }}
         target: ${{ matrix.target }}
+        dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
-  build-gcc-image-2:
-    name: Build Image (GCC ${{ matrix.gcc }} / ${{ matrix.target }})
-
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        gcc: [10, 9, 8, 7, 6, 5]
-        target:
-        - aarch64-linux-gnu
-        - alpha-linux-gnu
-        - arm-linux-gnueabihf
-        - hppa-linux-gnu
-        - i686-linux-gnu
-        - ia64-linux-gnu
-        - loongarch64-linux-gnu
-        - m68k-linux-gnu
-        - microblaze-linux-gnu
-        - mips-linux-gnu
-        - mips64-linux-gnuabi64
-        - mips64el-linux-gnuabi64
-        - mipsel-linux-gnu
-        - nios2-linux-gnu
-        - or1k-linux-uclibc
-        - powerpc-linux-gnu
-        - powerpc64-linux-gnu
-        - powerpc64le-linux-gnu
-        - riscv32-linux-gnu
-        - riscv64-linux-gnu
-        - s390x-linux-gnu
-        - sh4-linux-gnu
-        - sparc-linux-gnu
-        - sparc64-linux-gnu
-        - x86_64-linux-gnu
-        - xtensa-linux-uclibc
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - uses: ./.github/actions/build-image
-      with:
-        gcc: ${{ matrix.gcc }}
-        target: ${{ matrix.target }}
+  # build-gcc-image-2:
+  #   name: Build Image (GCC ${{ matrix.gcc }} / ${{ matrix.target }})
+  # 
+  #   runs-on: ubuntu-latest
+  # 
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       gcc: [10, 9, 8, 7, 6, 5]
+  #       target:
+  #       - aarch64-linux-gnu
+  #       - alpha-linux-gnu
+  #       - arm-linux-gnueabihf
+  #       - hppa-linux-gnu
+  #       - i686-linux-gnu
+  #       - ia64-linux-gnu
+  #       - loongarch64-linux-gnu
+  #       - m68k-linux-gnu
+  #       - microblaze-linux-gnu
+  #       - mips-linux-gnu
+  #       - mips64-linux-gnuabi64
+  #       - mips64el-linux-gnuabi64
+  #       - mipsel-linux-gnu
+  #       - nios2-linux-gnu
+  #       - or1k-linux-uclibc
+  #       - powerpc-linux-gnu
+  #       - powerpc64-linux-gnu
+  #       - powerpc64le-linux-gnu
+  #       - riscv32-linux-gnu
+  #       - riscv64-linux-gnu
+  #       - s390x-linux-gnu
+  #       - sh4-linux-gnu
+  #       - sparc-linux-gnu
+  #       - sparc64-linux-gnu
+  #       - x86_64-linux-gnu
+  #       - xtensa-linux-uclibc
+  # 
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v4
+  #   - uses: ./.github/actions/build-image
+  #     with:
+  #       gcc: ${{ matrix.gcc }}
+  #       target: ${{ matrix.target }}

@@ -2,9 +2,9 @@ name: Test Image
 
 on:
   workflow_dispatch:
-  workflow_run:
-    types: [ completed ]
-    workflows: [ "Build Image" ]
+  # workflow_run:
+  #   types: [ completed ]
+  #   workflows: [ "Build Image" ]
 
 jobs:
   test-gcc-image-1:

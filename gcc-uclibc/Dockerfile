@@ -1,5 +1,6 @@
 ARG PREFIX=/opt
 ARG BUILDER=debian:bookworm
+ARG BUILD="x86_64-host-linux-gnu"
 ARG BUILD_CC_VERSION
 ARG TARGET
 ARG KERNEL_ARCH
@@ -108,7 +109,7 @@ WORKDIR /build-binutils
 ARG BINUTILS_CONFIGURE_ARGS
 RUN eval "declare -a binutils_configure_args=(${BINUTILS_CONFIGURE_ARGS})" \
  && ../binutils-${BINUTILS_VERSION}/configure \
-            --build="x86_64-unknown-linux-gnu" \
+            --build="${BUILD}" \
             --target="${TARGET}" \
             --prefix="${PREFIX}" \
             --with-sysroot="${PREFIX}/${TARGET}" \
@@ -128,7 +129,7 @@ RUN eval "declare -a gcc_configure_args=(${GCC_CONFIGURE_ARGS})" \
  && ../gcc-${GCC_VERSION}/configure \
             --prefix="${PREFIX}" \
             --with-toolexeclibdir="${PREFIX}/${TARGET}/usr/lib" \
-            --build="x86_64-unknown-linux-gnu" \
+            --build="${BUILD}" \
             --target="${TARGET}" \
             --without-headers \
             --enable-languages="c,c++" \
@@ -172,7 +173,7 @@ RUN eval "declare -a gcc_configure_args=(${GCC_CONFIGURE_ARGS})" \
             --with-build-sysroot="${PREFIX}/${TARGET}" \
             --with-toolexeclibdir="${PREFIX}/${TARGET}/usr/lib" \
             --with-gxx-include-dir="${PREFIX}/${TARGET}/usr/include/c++" \
-            --build="x86_64-unknown-linux-gnu" \
+            --build="${BUILD}" \
             --target="${TARGET}" \
             --enable-languages="c,c++" \
             --enable-__cxa_atexit \
