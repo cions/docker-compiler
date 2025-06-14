@@ -17,7 +17,26 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - uses: ./.github/actions/test-image
+    - name: Print compiler version
+      shell: bash
+      run: ${CC} --version
+    - name: Print predefined macros
+      shell: bash
+      run: ${CC} -E -dM -x c /dev/null | sort
+    - name: Test C program
+      shell: bash
+      run: |
+        ${CC} -O2 -v -o test-c test.c
+        if command -v ${QEMU} >/dev/null; then
+          ${QEMU} ./test-c
+        fi
+    - name: Test C++ program
+      shell: bash
+      run: |
+        ${CXX} -std=c++11 -O2 -v -o test-cpp test.cpp -pthread -Wl,--as-needed -latomic -Wl,--no-as-needed
+        if command -v ${QEMU} >/dev/null; then
+          ${QEMU} ./test-cpp
+        fi
     strategy:
       fail-fast: false
       matrix:
@@ -66,7 +85,26 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - uses: ./.github/actions/test-image
+    - name: Print compiler version
+      shell: bash
+      run: ${CC} --version
+    - name: Print predefined macros
+      shell: bash
+      run: ${CC} -E -dM -x c /dev/null | sort
+    - name: Test C program
+      shell: bash
+      run: |
+        ${CC} -O2 -v -o test-c test.c
+        if command -v ${QEMU} >/dev/null; then
+          ${QEMU} ./test-c
+        fi
+    - name: Test C++ program
+      shell: bash
+      run: |
+        ${CXX} -std=c++11 -O2 -v -o test-cpp test.cpp -pthread -Wl,--as-needed -latomic -Wl,--no-as-needed
+        if command -v ${QEMU} >/dev/null; then
+          ${QEMU} ./test-cpp
+        fi
     strategy:
       fail-fast: false
       matrix:

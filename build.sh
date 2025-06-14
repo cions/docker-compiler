@@ -219,6 +219,7 @@ case "${GCC}" in
 		GMP_VERSION=6.2.1
 		MPFR_VERSION=4.1.0
 		MPC_VERSION=1.2.1
+		glibc_configure_args+=( "--enable-kernel=5.15" )
 		imagetags+=( "12.4-${IMAGE_TAG}" "12-${IMAGE_TAG}" )
 		;;
 	11)
@@ -319,6 +320,12 @@ unsupported() {
 	fi
 	exit 1
 }
+
+case "${GCC}:${TARGET}" in
+	[5-9]:*-uclibc)
+		KERNEL_VERSION=5.4.294
+		;;
+esac
 
 case "${GCC}:${TARGET}" in
 	7:hppa-*)
