@@ -5,6 +5,8 @@
 #include <vector>
 
 int main() {
+	std::cout << "Hello, C++ world!" << std::endl;
+
 	try {
 		throw std::runtime_error("exception");
 	} catch (const std::exception&) {
@@ -26,8 +28,8 @@ int main() {
 
 	int expected = 65536;
 	int actual = aint.load(std::memory_order_seq_cst);
+	std::cout << "expected: " << expected << ", actual: " << actual << std::endl;
 	if (actual != expected) {
-		std::cout << "expected: " << expected << ", actual: " << actual << std::endl;
 		return 1;
 	}
 
