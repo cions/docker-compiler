@@ -381,7 +381,7 @@ case "${GCC}:${TARGET}" in
 		BINUTILS_VERSION=2.30
 		GLIBC_VERSION=2.26
 		;;
-	1[0-1]:sparc-*)
+	1[0-5]:sparc-*)
 		gcc_configure_args+=( "--with-cpu=v9" )
 		;;
 	[5-9]:sparc-*)
