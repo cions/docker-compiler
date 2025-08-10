@@ -486,6 +486,7 @@ for tag in "${imagetags[@]}"; do
 done
 
 buildargs+=(
+	--build-arg BASE_IMAGE="debian:trixie-slim"
 	--build-arg BUILDER="${BUILDER}"
 	--build-arg BUILD_CC_VERSION="${BUILD_CC_VERSION}"
 	--build-arg DOCKERFILE_HASH="${DOCKERFILE_HASH}"

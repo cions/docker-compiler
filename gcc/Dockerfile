@@ -1,7 +1,8 @@
-ARG PREFIX=/opt
-ARG BUILDER=debian:bookworm
-ARG BUILD="x86_64-host-linux-gnu"
+ARG BASE_IMAGE="debian:latest"
+ARG BUILDER="debian:latest"
 ARG BUILD_CC_VERSION
+ARG PREFIX="/opt"
+ARG BUILD="x86_64-host-linux-gnu"
 ARG TARGET
 ARG KERNEL_ARCH
 ARG QEMU_ARCH
@@ -205,7 +206,7 @@ COPY --from=qemu /bin/sh /usr/bin/[q]emu-${QEMU_ARCH}-static ${PREFIX}/bin/
 RUN rm -rf "${PREFIX}/bin/sh" "${PREFIX}/share/info" "${PREFIX}/share/man"
 
 
-FROM debian:bookworm-slim
+FROM ${BASE_IMAGE}
 
 ARG PREFIX
 ARG TARGET
