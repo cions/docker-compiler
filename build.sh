@@ -336,6 +336,9 @@ case "${GCC}:${TARGET}" in
 	5:ia64-* | 1[4-5]:ia64-*)
 		unsupported
 		;;
+	13:ia64-*)
+		imagetags+=( "${IMAGE_TAG}" )
+		;;
 	11:ia64-*)
 		BINUTILS_VERSION=2.34
 		;;
@@ -350,6 +353,9 @@ case "${GCC}:${TARGET}" in
 		;;
 	1[4-5]:nios2-*)
 		unsupported
+		;;
+	13:nios2-*)
+		imagetags+=( "${IMAGE_TAG}" )
 		;;
 	11:nios2-*)
 		GLIBC_VERSION=2.34
