@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [15, 14, 13, 12, 11]
+        version: [16, 15, 14, 13, 12, 11]
         arch:
         - aarch64
         - alpha
@@ -69,10 +69,12 @@ jobs:
         - x86_64
         - xtensa
         exclude:
+        - { version: 16, arch: ia64 }
         - { version: 15, arch: ia64 }
         - { version: 14, arch: ia64 }
         - { version: 12, arch: loong64 }
         - { version: 11, arch: loong64 }
+        - { version: 16, arch: nios2 }
         - { version: 15, arch: nios2 }
         - { version: 14, arch: nios2 }
 

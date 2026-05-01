@@ -148,9 +148,9 @@ case "${TARGET}" in
 		KERNEL_ARCH="x86_64"
 		QEMU_ARCH="x86_64"
 		IMAGE_TAG="x86_64"
-		binutils_configure_args+=( "ac_cv_target=x86_64-cross-linux-gnu")
-		gcc_configure_args+=( "ac_cv_target=x86_64-cross-linux-gnu")
-		glibc_configure_args+=( "ac_cv_target=x86_64-cross-linux-gnu")
+		binutils_configure_args+=( "ac_cv_target=x86_64-cross-linux-gnu" )
+		gcc_configure_args+=( "ac_cv_target=x86_64-cross-linux-gnu" )
+		glibc_configure_args+=( "ac_cv_target=x86_64-cross-linux-gnu" )
 		;;
 	xtensa-*)
 		KERNEL_ARCH="xtensa"
@@ -173,22 +173,34 @@ case "${TARGET}" in
 esac
 
 case "${GCC}" in
+	16)
+		BUILDER=debian:trixie
+		BUILD_CC_VERSION=14
+		KERNEL_VERSION=6.18.26
+		BINUTILS_VERSION=2.46.0
+		GCC_VERSION=16.1.0
+		GLIBC_VERSION=2.43
+		GMP_VERSION=6.3.0
+		MPFR_VERSION=4.2.2
+		MPC_VERSION=1.4.1
+		imagetags+=( "16.1-${IMAGE_TAG}" "16-${IMAGE_TAG}" "${IMAGE_TAG}" )
+		;;
 	15)
 		BUILDER=debian:bookworm
 		BUILD_CC_VERSION=12
-		KERNEL_VERSION=6.12.33
+		KERNEL_VERSION=6.12.85
 		BINUTILS_VERSION=2.44
 		GCC_VERSION=15.2.0
 		GLIBC_VERSION=2.41
 		GMP_VERSION=6.3.0
 		MPFR_VERSION=4.2.2
 		MPC_VERSION=1.3.1
-		imagetags+=( "15.2-${IMAGE_TAG}" "15-${IMAGE_TAG}" "${IMAGE_TAG}" )
+		imagetags+=( "15.2-${IMAGE_TAG}" "15-${IMAGE_TAG}" )
 		;;
 	14)
 		BUILDER=debian:bookworm
 		BUILD_CC_VERSION=12
-		KERNEL_VERSION=6.6.93
+		KERNEL_VERSION=6.6.137
 		BINUTILS_VERSION=2.42
 		GCC_VERSION=14.3.0
 		GLIBC_VERSION=2.39
@@ -200,7 +212,7 @@ case "${GCC}" in
 	13)
 		BUILDER=debian:bookworm
 		BUILD_CC_VERSION=12
-		KERNEL_VERSION=6.1.141
+		KERNEL_VERSION=6.1.170
 		BINUTILS_VERSION=2.40
 		GCC_VERSION=13.4.0
 		GLIBC_VERSION=2.37
@@ -212,7 +224,7 @@ case "${GCC}" in
 	12)
 		BUILDER=debian:bookworm
 		BUILD_CC_VERSION=12
-		KERNEL_VERSION=5.15.185
+		KERNEL_VERSION=5.15.204
 		BINUTILS_VERSION=2.40
 		GCC_VERSION=12.5.0
 		GLIBC_VERSION=2.37
@@ -224,7 +236,7 @@ case "${GCC}" in
 	11)
 		BUILDER=debian:bullseye
 		BUILD_CC_VERSION=10
-		KERNEL_VERSION=5.10.238
+		KERNEL_VERSION=5.10.254
 		BINUTILS_VERSION=2.36
 		GCC_VERSION=11.5.0
 		GLIBC_VERSION=2.33
@@ -236,7 +248,7 @@ case "${GCC}" in
 	10)
 		BUILDER=debian:bullseye
 		BUILD_CC_VERSION=10
-		KERNEL_VERSION=5.4.294
+		KERNEL_VERSION=5.4.302
 		BINUTILS_VERSION=2.34
 		GCC_VERSION=10.5.0
 		GLIBC_VERSION=2.31
@@ -333,7 +345,7 @@ case "${GCC}:${TARGET}" in
 	5:hppa-*)
 		GLIBC_VERSION=2.23
 		;;
-	5:ia64-* | 1[4-5]:ia64-*)
+	5:ia64-* | 1[4-6]:ia64-*)
 		unsupported
 		;;
 	13:ia64-*)
@@ -351,7 +363,7 @@ case "${GCC}:${TARGET}" in
 	[5-7]:microblaze-*)
 		unsupported
 		;;
-	1[4-5]:nios2-*)
+	1[4-6]:nios2-*)
 		unsupported
 		;;
 	13:nios2-*)
@@ -375,7 +387,7 @@ case "${GCC}:${TARGET}" in
 		GLIBC_VERSION=2.22
 		;;
 	[7-9]:riscv32-* | 10:riscv32-*)
-		KERNEL_VERSION=5.4.294
+		KERNEL_VERSION=5.4.302
 		GLIBC_VERSION=2.33
 		;;
 	[7-8]:riscv64-*)
@@ -390,7 +402,7 @@ case "${GCC}:${TARGET}" in
 		BINUTILS_VERSION=2.30
 		GLIBC_VERSION=2.26
 		;;
-	1[0-5]:sparc-*)
+	1[0-6]:sparc-*)
 		gcc_configure_args+=( "--with-cpu=v9" )
 		;;
 	[5-9]:sparc-*)

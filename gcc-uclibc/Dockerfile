@@ -67,10 +67,11 @@ RUN curl -fsSLO "https://ftpmirror.gnu.org/mpfr/mpfr-${MPFR_VERSION}.tar.xz" \
  && mv "mpfr-${MPFR_VERSION}" "gcc-${GCC_VERSION}/mpfr" \
  && rm "mpfr-${MPFR_VERSION}.tar.xz"
 ARG MPC_VERSION
-RUN curl -fsSLO "https://ftpmirror.gnu.org/mpc/mpc-${MPC_VERSION}.tar.gz" \
- && tar xf "mpc-${MPC_VERSION}.tar.gz" \
+RUN curl -fsSLO "https://ftpmirror.gnu.org/mpc/mpc-${MPC_VERSION}.tar.xz" \
+ || curl -fsSLO "https://ftpmirror.gnu.org/mpc/mpc-${MPC_VERSION}.tar.gz" \
+ && tar xf "mpc-${MPC_VERSION}.tar".* \
  && mv "mpc-${MPC_VERSION}" "gcc-${GCC_VERSION}/mpc" \
- && rm "mpc-${MPC_VERSION}.tar.gz"
+ && rm "mpc-${MPC_VERSION}.tar".*
 ARG KERNEL_VERSION
 RUN curl -fsSLO "https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_VERSION%%.*}.x/linux-${KERNEL_VERSION}.tar.xz" \
  && tar xf "linux-${KERNEL_VERSION}.tar.xz" \
